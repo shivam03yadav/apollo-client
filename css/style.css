@@ -1,0 +1,46 @@
+.container1,.container2{
+    height: 8%;
+    border:  lavender solid 1px;
+    display: flex;  
+}
+.maincontainer{
+    margin: 10%;
+    width:80%;
+    margin-left: 10%;
+    box-shadow: 10px 5px 10px #bdb2b2;
+}
+.a{
+    flex: 1;
+    padding: 1%;
+}
+.b{
+    flex: 4;
+    padding: 1%;
+}
+.e{
+    flex: 1;
+    padding: 1%;
+}
+.fa {
+    margin-left: 92%;
+    }
+.list-1 {
+    font-size: larger;
+    display: inline;
+    }
+        
+.list-1+::before {
+   content: '/';
+   padding: 1%;
+}
+.box1{
+   
+    flex: 2;
+    padding: 1%;
+}
+.box2{
+
+    background-color:lavender;
+    flex: 1;
+    padding: 1%;
+}
