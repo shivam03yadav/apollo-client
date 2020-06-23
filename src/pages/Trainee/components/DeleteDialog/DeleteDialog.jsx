@@ -14,7 +14,6 @@ import {
 } from '@material-ui/core';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { snackbarContext } from '../../../../contexts/SnackBarProvidor';
-import callApi from '../../../../libs/utils/api';
 
 
 class DeleteDialog extends React.Component {
@@ -26,30 +25,19 @@ class DeleteDialog extends React.Component {
     };
   }
 
-    onClickHandler = async (value) => {
-      const token = localStorage.getItem('token');
-      const { remove, data } = this.props;
-      const { originalId: deleteId } = data;
+    onClickHandler = async (snackValue) => {
+      const { remove, data, deleteTrainee } = this.props;
+      const { originalId: id } = data;
       await this.setState({
         loader: true,
         disabled: true,
       });
-      const response = await callApi(
-        'delete',
-        `/trainee/${deleteId}`,
-        {},
-        {
-          headers: {
-            authorization: token,
-            Accept: 'application/json',
-          },
-        },
-      );
-      if (response.status === 'ok') {
+      const response = await deleteTrainee({ variables: { id } });
+      if (response.data.deleteTrainee) {
         remove();
-        value(response.message, 'success');
+        snackValue('Trainee deleted successfully', 'success');
       } else {
-        value(response.message, 'error');
+        snackValue('Trainee deleted failed', 'error');
       }
 
       this.setState({
