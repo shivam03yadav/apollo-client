@@ -124,7 +124,7 @@ class AddDialog extends React.Component {
     const response = await createTrainee({
       variables: { name, email, password },
     });
-    if (response.status === 'ok') {
+    if (response.data) {
       onSubmit({ name, email, password });
       snackValue('Trainee Added Successfully', 'success');
     } else {

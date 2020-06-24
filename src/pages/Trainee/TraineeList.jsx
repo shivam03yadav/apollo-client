@@ -157,14 +157,19 @@ class TraineeList extends React.Component {
 
   handleRemove = () => {
     const { rowsPerPage, page } = this.state;
+    console.log('here is the value at first', rowsPerPage, page);
     const {
       data: { getTrainee: { count = 0 } = {}, refetch },
     } = this.props;
-    if (count - page * rowsPerPage === 1 && page > 0) {
+    if (count - page * rowsPerPage === 0 && page > 0) {
       this.setState({
         page: page - 1,
+      },
+      () => {
+        const { page, rowsPerPage } = this.state;
+        console.log('here is the value at first', rowsPerPage, page);
+        refetch({ skip: (page) * rowsPerPage, limit: rowsPerPage });
       });
-      refetch({ skip: (page - 1) * rowsPerPage, limit: rowsPerPage });
     }
     this.setState({
       RemoveOpen: false,
@@ -311,7 +316,7 @@ class TraineeList extends React.Component {
                       page={page}
                       rowsPerPage={rowsPerPage}
                       onChangePage={this.handleChangePage(refetch)}
-                      onChangeRowsPerPage={this.handleChangeRowsPerPage}
+                      onChangeRowsPerPage={this.handleChangeRowsPerPage(refetch)}
                     />
                     {/* <Router>
           <ul>
