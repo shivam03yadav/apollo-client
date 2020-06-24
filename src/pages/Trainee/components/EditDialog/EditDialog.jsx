@@ -19,7 +19,6 @@ import EmailIcon from '@material-ui/icons/Email';
 import PersonIcon from '@material-ui/icons/Person';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { snackbarContext } from '../../../../contexts/SnackBarProvidor';
-import callApi from '../../../../libs/utils/api';
 
 
 class EditDialog extends React.Component {
@@ -109,40 +108,26 @@ class EditDialog extends React.Component {
     }
   };
 
-  onClickHandler = async (value) => {
-    const token = localStorage.getItem('token');
-    const { name, email, password } = this.state;
-    const { handleEdit, data, handleEditClose } = this.props;
-    const { originalId: editId } = data;
+  onClickHandler = async (snackValue) => {
+    const { name, email } = this.state;
+    const {
+      handleEdit, data, handleEditClose, updateTrainee,
+    } = this.props;
+    const { originalId: id } = data;
     await this.setState({
       loader: true,
       disabled: true,
     });
-    const response = await callApi(
-      'put',
-      '/trainee',
-      {
-        data: {
-          name, email, password, id: editId,
-        },
-      },
-      {
-        headers: {
-          authorization: token,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-    if (response.status === 'ok') {
+    const response = await updateTrainee({ variables: { id, name, email } });
+    if (response.data.updateTrainee) {
       handleEdit({
         name,
         email,
       });
-      value(response.message, 'success');
+      snackValue('Trainee Updated Successfully', 'success');
       handleEditClose();
     } else {
-      value(response.message, 'error');
+      snackValue('Trainee Updation failed', 'error');
     }
 
     this.setState({

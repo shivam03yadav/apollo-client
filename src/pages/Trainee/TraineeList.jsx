@@ -8,6 +8,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import { graphql } from '@apollo/react-hoc';
 import Compose from 'lodash.flowright';
+import { Mutation } from '@apollo/react-components';
 import {
   AddDialog, WrapTable, EditDialog,
   DeleteDialog,
@@ -15,6 +16,7 @@ import {
 import { getDateFormatted } from './data/trainee';
 import { snackbarContext } from '../../contexts/SnackBarProvidor';
 import GET_TRAINEE from './query';
+import { CREATE_TRAINEE, UPDATE_TRAINEE, DELETE_TRAINEE } from './mutation';
 
 // import {
 //   Link, BrowserRouter as Router,
@@ -33,7 +35,6 @@ class TraineeList extends React.Component {
       rowsPerPage: 20,
       EditOpen: false,
       RemoveOpen: false,
-      loader: false,
       traineeData: {},
       deleteData: {},
     };
@@ -72,11 +73,15 @@ class TraineeList extends React.Component {
     }));
   };
 
-  handleChangeRowsPerPage = async (event) => {
-    await this.setState({
+  handleChangeRowsPerPage = (refetch) => (event) => {
+    this.setState({
       page: 0,
       rowsPerPage: event.target.value,
-    });
+    },
+    ({ rowsPerPage, page } = this.state) => refetch({
+      skip: page * rowsPerPage,
+      limit: rowsPerPage,
+    }));
   };
 
   handleDeleteDialogOpen = (element) => {
@@ -93,21 +98,19 @@ class TraineeList extends React.Component {
   };
 
   handleRemove = () => {
+    const { rowsPerPage, page } = this.state;
     const {
-      count, rowsPerPage, page, data,
-    } = this.state;
-    const mod = count % rowsPerPage;
-    if (mod === 1 && data.length !== 1) {
+      data: { getTrainee: { count = 0 } = {}, refetch },
+    } = this.props;
+    if (count - page * rowsPerPage === 1 && page > 0) {
       this.setState({
         page: page - 1,
       });
+      refetch({ skip: (page - 1) * rowsPerPage, limit: rowsPerPage });
     }
-    const { deleteData } = this.state;
     this.setState({
       RemoveOpen: false,
     });
-    console.log('DELETE ITEM');
-    console.log(deleteData);
   };
 
 
@@ -124,25 +127,18 @@ class TraineeList extends React.Component {
     });
   };
 
-  handleEdit = (data) => {
+  handleEdit = () => {
     this.setState(
       {
         EditOpen: false,
       },
-      () => {
-        console.log('Edit Data');
-        console.log(data);
-      },
     );
   };
 
-  submitData = (data) => {
+  submitData = () => {
     this.setState(
       {
         open: false,
-      },
-      () => {
-        console.log(data);
       },
     );
   };
@@ -159,6 +155,8 @@ class TraineeList extends React.Component {
       editData,
       deleteData,
     } = this.state;
+
+    const variables = { skip: rowsPerPage * page, limit: rowsPerPage };
     const {
       classes,
       data: {
@@ -167,78 +165,97 @@ class TraineeList extends React.Component {
       },
     } = this.props;
     return (
-      <>
-        <Button
-          className={classes.parent}
-          variant="outlined"
-          color="primary"
-          onClick={this.handleState}
-        >
-          ADD TRAINEE LIST
-        </Button>
-        &nbsp;
-        <AddDialog
-          open={open}
-          onClose={this.handleClose}
-          onSubmit={this.submitData}
-        />
+      <Mutation
+        mutation={DELETE_TRAINEE}
+        refetchQueries={[{ query: GET_TRAINEE, variables }]}
+      >
+        {(deleteTrainee) => (
+          <Mutation
+            mutation={CREATE_TRAINEE}
+            refetchQueries={[{ query: GET_TRAINEE, variables }]}
+          >
+            {(createTrainee) => (
+              <Mutation
+                mutation={UPDATE_TRAINEE}
+                refetchQueries={[{ query: GET_TRAINEE, variables }]}
+              >
+                {(updateTrainee) => (
 
-        <EditDialog
-          Editopen={EditOpen}
-          handleEditClose={this.handleEditClose}
-          handleEdit={this.handleEdit}
-          data={editData}
-        />
-        <DeleteDialog
-          openRemove={RemoveOpen}
-          onClose={this.handleRemoveClose}
-          remove={this.handleRemove}
-          data={deleteData}
-        />
-        <br />
-        <br />
-        <WrapTable
-          loader={loading}
-          datalength={records.length}
-          data={records}
-          column={[
-            {
-              field: 'name',
-              label: 'Name',
-            },
-            {
-              field: 'email',
-              label: 'Email-Address',
-              format: (value) => value && value.toUpperCase(),
-            },
-            {
-              field: 'createdAt',
-              label: 'Date',
-              align: 'right',
-              format: getDateFormatted,
-            },
-          ]}
-          actions={[
-            {
-              Icon: <EditIcon />,
-              handler: this.handleEditDialogOpen,
-            },
-            {
-              Icon: <DeleteIcon />,
-              handler: this.handleDeleteDialogOpen,
-            },
-          ]}
-          orderBy={orderBy}
-          order={order}
-          onSort={this.handleSort}
-          onSelect={this.handleSelect}
-          count={count}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onChangePage={this.handleChangePage(refetch)}
-          onChangeRowsPerPage={this.handleChangeRowsPerPage}
-        />
-        {/* <Router>
+                  <>
+                    <Button
+                      className={classes.parent}
+                      variant="outlined"
+                      color="primary"
+                      onClick={this.handleState}
+                    >
+          ADD TRAINEE LIST
+                    </Button>
+        &nbsp;
+                    <AddDialog
+                      createTrainee={createTrainee}
+                      open={open}
+                      onClose={this.handleClose}
+                      onSubmit={this.submitData}
+                    />
+
+                    <EditDialog
+                      updateTrainee={updateTrainee}
+                      Editopen={EditOpen}
+                      handleEditClose={this.handleEditClose}
+                      handleEdit={this.handleEdit}
+                      data={editData}
+                    />
+                    <DeleteDialog
+                      deleteTrainee={deleteTrainee}
+                      openRemove={RemoveOpen}
+                      onClose={this.handleRemoveClose}
+                      remove={this.handleRemove}
+                      data={deleteData}
+                    />
+                    <br />
+                    <br />
+                    <WrapTable
+                      loader={loading}
+                      datalength={records.length}
+                      data={records}
+                      column={[
+                        {
+                          field: 'name',
+                          label: 'Name',
+                        },
+                        {
+                          field: 'email',
+                          label: 'Email-Address',
+                          format: (value) => value && value.toUpperCase(),
+                        },
+                        {
+                          field: 'createdAt',
+                          label: 'Date',
+                          align: 'right',
+                          format: getDateFormatted,
+                        },
+                      ]}
+                      actions={[
+                        {
+                          Icon: <EditIcon />,
+                          handler: this.handleEditDialogOpen,
+                        },
+                        {
+                          Icon: <DeleteIcon />,
+                          handler: this.handleDeleteDialogOpen,
+                        },
+                      ]}
+                      orderBy={orderBy}
+                      order={order}
+                      onSort={this.handleSort}
+                      onSelect={this.handleSelect}
+                      count={count}
+                      page={page}
+                      rowsPerPage={rowsPerPage}
+                      onChangePage={this.handleChangePage(refetch)}
+                      onChangeRowsPerPage={this.handleChangeRowsPerPage}
+                    />
+                    {/* <Router>
           <ul>
             {trainees.map(({ name, id }) => (
               <li key={id}>
@@ -249,10 +266,17 @@ class TraineeList extends React.Component {
             ))}
           </ul>
         </Router> */}
-      </>
+                  </>
+                )}
+              </Mutation>
+            )}
+          </Mutation>
+        )}
+      </Mutation>
     );
   }
 }
+
 TraineeList.propTypes = {
   // match: PropTypes.object.isRequired,
   classes: PropTypes.objectOf(PropTypes.string).isRequired,

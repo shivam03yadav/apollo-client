@@ -16,7 +16,6 @@ import PropTypes from 'prop-types';
 import { CircularProgress } from '@material-ui/core';
 import dailogSchema from '../../../helper';
 import { snackbarContext } from '../../../../contexts/SnackBarProvidor/snackBarProvider';
-import callApi from '../../../../libs/utils/api';
 
 class AddDialog extends React.Component {
   constructor(props) {
@@ -114,32 +113,22 @@ class AddDialog extends React.Component {
     this.setState({ [key]: value });
   };
 
-  onClickHandler = async (value) => {
+  onClickHandler = async (snackValue) => {
     const { name, email, password } = this.state;
-    const token = localStorage.getItem('token');
-    const { onSubmit } = this.props;
+    const { onSubmit, createTrainee } = this.props;
     await this.setState({
       loader: true,
       disabled: true,
     });
 
-    const response = await callApi(
-      'post',
-      '/trainee',
-      { data: { name, email, password } },
-      {
-        headers: {
-          authorization: token,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      },
-    );
+    const response = await createTrainee({
+      variables: { name, email, password },
+    });
     if (response.status === 'ok') {
       onSubmit({ name, email, password });
-      value(response.message, 'success');
+      snackValue('Trainee Added Successfully', 'success');
     } else {
-      value(response.message, 'error');
+      snackValue('Trainee Added Failed', 'error');
     }
 
     this.setState({
