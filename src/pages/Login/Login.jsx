@@ -100,24 +100,25 @@ class Login extends React.Component {
   onClickHandler = async (value) => {
     const { email, password } = this.state;
     const { loginUser } = this.props;
-    await this.setState({
+    this.setState({
       disabled: true,
       loader: true,
     });
     const response = await loginUser({ variables: { email, password } });
     if (response.data.loginUser) {
-      localStorage.setItem("token", response.data.loginUser);
+      localStorage.setItem('token', response.data.loginUser);
       this.setState({
         redirect: true,
       });
     } else {
-      value("login failed", "error");
+      value('login Failed', 'error');
     }
     this.setState({
       disabled: false,
       loader: false,
     });
   };
+
 
   renderRedirect = () => {
     const { redirect } = this.state;
@@ -142,7 +143,9 @@ class Login extends React.Component {
 
   render() {
     const { classes } = this.props;
-    const { disabled, loader, error } = this.state;
+    const {
+      disabled, loader, error,
+    } = this.state;
     return (
       <>
         <div className={classes.main}>
@@ -204,7 +207,6 @@ class Login extends React.Component {
               <snackbarContext.Consumer>
                 {(value) => (
                   <Button
-                    id="button"
                     color="primary"
                     variant="contained"
                     onClick={() => this.onClickHandler(value)}
@@ -213,7 +215,7 @@ class Login extends React.Component {
                   >
                     {this.renderRedirect()}
                     <span>{loader ? <CircularProgress size={20} /> : ''}</span>
-                  SIGN IN
+                  SIGNIN
                   </Button>
                 )}
               </snackbarContext.Consumer>
