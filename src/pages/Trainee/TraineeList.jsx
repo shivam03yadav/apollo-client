@@ -157,7 +157,6 @@ class TraineeList extends React.Component {
 
   handleRemove = () => {
     const { rowsPerPage, page } = this.state;
-    console.log('here is the value at first', rowsPerPage, page);
     const {
       data: { getTrainee: { count = 0 } = {}, refetch },
     } = this.props;
@@ -167,7 +166,6 @@ class TraineeList extends React.Component {
       },
       () => {
         const { page, rowsPerPage } = this.state;
-        console.log('here is the value at first', rowsPerPage, page);
         refetch({ skip: (page) * rowsPerPage, limit: rowsPerPage });
       });
     }
