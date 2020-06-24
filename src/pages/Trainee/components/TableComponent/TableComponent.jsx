@@ -49,7 +49,7 @@ function TableComponent(props) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          {data
             .map((arrData) => (
               <TableRow key={arrData.id} className={classes.block} hover>
                 {column.map(({ field, align, format }) => (

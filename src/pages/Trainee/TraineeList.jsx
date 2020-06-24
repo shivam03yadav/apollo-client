@@ -17,6 +17,7 @@ import { getDateFormatted } from './data/trainee';
 import { snackbarContext } from '../../contexts/SnackBarProvidor';
 import GET_TRAINEE from './query';
 import { CREATE_TRAINEE, UPDATE_TRAINEE, DELETE_TRAINEE } from './mutation';
+import { UPDATE_TRAINEE_SUB, DELETE_TRAINEE_SUB } from './subscription';
 
 // import {
 //   Link, BrowserRouter as Router,
@@ -38,6 +39,63 @@ class TraineeList extends React.Component {
       traineeData: {},
       deleteData: {},
     };
+  }
+
+  componentDidMount() {
+    const {
+      data: { subscribeToMore },
+    } = this.props;
+    subscribeToMore({
+      document: UPDATE_TRAINEE_SUB,
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData) return prev;
+        const {
+          getTrainee: { records },
+        } = prev;
+        const {
+          data: { traineeUpdated },
+        } = subscriptionData;
+        const updateRecords = [...records].map((record) => {
+          if (record.originalId === traineeUpdated.id) {
+            return {
+              ...record,
+              ...traineeUpdated,
+            };
+          }
+          return record;
+        });
+        return {
+          getTrainee: {
+            ...prev.getTrainee,
+            count: prev.getTrainee.count,
+            records: updateRecords,
+          },
+        };
+      },
+    });
+
+    subscribeToMore({
+      document: DELETE_TRAINEE_SUB,
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData) return prev;
+        const {
+          getTrainee: { records, count },
+        } = prev;
+        const {
+          data: { traineeDeleted },
+        } = subscriptionData;
+        const updateRecords = [...records].filter(
+          (record) => traineeDeleted !== record.originalId,
+        );
+        return {
+          getTrainee: {
+            ...prev.getTrainee,
+            count: count - 1,
+            records: updateRecords,
+          },
+        };
+      },
+    });
   }
 
   handleState = () => {
@@ -102,11 +160,14 @@ class TraineeList extends React.Component {
     const {
       data: { getTrainee: { count = 0 } = {}, refetch },
     } = this.props;
-    if (count - page * rowsPerPage === 1 && page > 0) {
+    if (count - page * rowsPerPage === 0 && page > 0) {
       this.setState({
         page: page - 1,
+      },
+      () => {
+        const { page, rowsPerPage } = this.state;
+        refetch({ skip: (page) * rowsPerPage, limit: rowsPerPage });
       });
-      refetch({ skip: (page - 1) * rowsPerPage, limit: rowsPerPage });
     }
     this.setState({
       RemoveOpen: false,
@@ -253,7 +314,7 @@ class TraineeList extends React.Component {
                       page={page}
                       rowsPerPage={rowsPerPage}
                       onChangePage={this.handleChangePage(refetch)}
-                      onChangeRowsPerPage={this.handleChangeRowsPerPage}
+                      onChangeRowsPerPage={this.handleChangeRowsPerPage(refetch)}
                     />
                     {/* <Router>
           <ul>
